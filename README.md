@@ -3,11 +3,13 @@ I feel like I keep remaking the same projects over and over again. This is a git
 to be able to clone this repo and get started with SDL2 and C. any other projects. Feel free to use this.
 
 # Build Instructions
-For Linux you must install `cmake` and `libsdl2-dev`
+For Linux you must install `cmake` and `libsdl2-dev`.
+The lib and include directories are only necessary for the windows build.
 
 run the commands
 
 ```
+mkdir build
 cmake -B build -S src
 ```
 
