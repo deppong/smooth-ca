@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <time.h>
 
-const int WIDTH = 800, HEIGHT = 800;
+const int WIDTH = 400, HEIGHT = 400;
 
 uint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
     return (a<<24) + (b<<16) + (g<<8) + r;
@@ -21,13 +21,29 @@ void compute_cells(float *cells, float *next_cells){
         for (int j = 0; j < WIDTH; j++) {
 
             // neighbors
-            float ksum = 0.0f;
-            for (int y = -1; y < 2; y++) {
-                for (int x = -1; x < 2; x++) {
-                    ksum += cells[(j+x+HEIGHT)%HEIGHT + (i+y+WIDTH)%WIDTH * WIDTH];
+            float kisum = 0.0f;
+            float kosum = 0.0f;
+            for (int y = -11; y < 12; y++) {
+                for (int x = -11; x < 12; x++) {
+                    if (x >= -1 && x < 2 && y >= -1 && y < 2) {
+                        kisum += cells[(j+x+HEIGHT)%HEIGHT + (i+y+WIDTH)%WIDTH * WIDTH];
+                    }
+                    kosum += cells[(j+x+HEIGHT)%HEIGHT + (i+y+WIDTH)%WIDTH * WIDTH];
                 }
             }
-            next_cells[j + i*WIDTH] = ksum/9.f;
+            kisum /= 9.f;
+            kosum /= 529.f;
+            if ((kisum >= 0.5f && 0.26f <= kosum && kosum <= 0.46f) ||
+                (kisum < 0.5f && 0.27f <= kosum && kosum <= 0.36f)) {
+                next_cells[j + i*WIDTH] = 1.f;
+            } else {
+                next_cells[j + i*WIDTH] = 0.0f;
+            }
+            // if (kosum >= 0.5f) {
+            //     next_cells[j + i*WIDTH] = 1.0f;
+            // } else {
+            //     next_cells[j + i*WIDTH] = 0.0f;
+            // }
 
         }
     }
@@ -40,7 +56,6 @@ void compute_frame(uint32_t *framedata, float *cells) {
         }
     }
 }
-
 
 int main(void) {
     int quit = 1;
@@ -87,8 +102,8 @@ int main(void) {
         SDL_RenderClear(renderer);
 
         SDL_UpdateTexture(framebuffer, NULL, framedata, WIDTH*4);
-        SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
 
+        SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
         SDL_RenderPresent(renderer);
     }
 
