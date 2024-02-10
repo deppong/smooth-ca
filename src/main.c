@@ -1,15 +1,18 @@
+/*
 #ifdef __unix__
     #include <SDL2/SDL.h>
 #elif defined _WIN32
     #include <SDL.h>
 #endif
+*/
+#include <SDL.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
 const int WIDTH = 800, HEIGHT = 800;
 
-int main(int argc, char**argv) {
+int main(void) {
     int quit = 1;
     SDL_Event e;
     SDL_Init(SDL_INIT_VIDEO);
@@ -25,7 +28,6 @@ int main(int argc, char**argv) {
         switch (e.type) {
             case SDL_QUIT: quit=0; break;
         }
-
 
         SDL_RenderPresent(renderer);
     }
