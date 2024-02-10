@@ -3,17 +3,44 @@
 #include <SDL_error.h>
 #include <SDL_pixels.h>
 #include <SDL_render.h>
-
 #include <SDL_video.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
+
+const int WIDTH = 800, HEIGHT = 800;
 
 uint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
     return (a<<24) + (b<<16) + (g<<8) + r;
 }
 
-const int WIDTH = 800, HEIGHT = 800;
+void compute_cells(float *cells, float *next_cells){
+    for (int i = 0; i < HEIGHT; i++) {
+        for (int j = 0; j < WIDTH; j++) {
+
+            // neighbors
+            float ksum = 0.0f;
+            for (int y = -1; y < 2; y++) {
+                for (int x = -1; x < 2; x++) {
+                    ksum += cells[(j+x+HEIGHT)%HEIGHT + (i+y+WIDTH)%WIDTH * WIDTH];
+                }
+            }
+            next_cells[j + i*WIDTH] = ksum/9.f;
+
+        }
+    }
+}
+
+void compute_frame(uint32_t *framedata, float *cells) {
+    for(int i = 0; i < HEIGHT; i++) {
+        for(int j = 0; j < WIDTH; j++) {
+            framedata[j + i * WIDTH] = pack_color(cells[j + i*WIDTH]*255, cells[j + i*WIDTH]*255, cells[j + i*WIDTH]*255, cells[j + i*WIDTH]*255);
+        }
+    }
+}
+
 
 int main(void) {
     int quit = 1;
@@ -35,11 +62,14 @@ int main(void) {
         return EXIT_FAILURE;
     }
 
-    // load pixels into the framedata
-    for (int i = 0; i < WIDTH*HEIGHT; i++) {
-        framedata[i] = pack_color(60, 70, 70, 255);
-    }
+    srand(time(0));
 
+    float *cells = malloc(sizeof(float) * WIDTH*HEIGHT);
+    float *next_cells = malloc(sizeof(float) * WIDTH*HEIGHT);
+    for(int i = 0; i < WIDTH*HEIGHT; i++){
+        cells[i] = (float)rand() / RAND_MAX;
+        next_cells[i] = (float)rand() / RAND_MAX;
+    }
 
     while(quit) {
         SDL_PollEvent(&e);
@@ -48,10 +78,17 @@ int main(void) {
             case SDL_QUIT: quit=0; break;
         }
 
+        // Compute
+        compute_cells(cells, next_cells);
+        compute_frame(framedata, next_cells);
+        cells = next_cells;
+
         // Render loop: move pointer of framedata to the texture, then do 1 draw call in SDL_RenderCopy();
         SDL_RenderClear(renderer);
+
         SDL_UpdateTexture(framebuffer, NULL, framedata, WIDTH*4);
         SDL_RenderCopy(renderer, framebuffer, NULL, NULL);
+
         SDL_RenderPresent(renderer);
     }
 
@@ -60,6 +97,8 @@ int main(void) {
     SDL_DestroyTexture(framebuffer);
 
     free(framedata);
+    free(cells);
+    free(next_cells);
 
     return EXIT_SUCCESS;
 }
