@@ -6,7 +6,7 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
         CACHE STRING "Vcpkg toolchain file")
 endif()
 
-project(sdl_template LANGUAGES C CXX)
+project(smooth-ca LANGUAGES C CXX)
 
 # GLOB RECURSE get all source files, remove or change as needed
 file(

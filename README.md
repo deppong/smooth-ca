@@ -1,6 +1,4 @@
-# SDL Template
-I feel like I keep remaking the same projects over and over again. This is a git repo to simply allow me or anyone who finds this
-to be able to clone this repo and get started with SDL2 and C. any other projects. Feel free to use this.
+# Smooth Cellular Automata
 
 # Build Instructions
 Recently I decided to start using [vcpkg](https://github.com/microsoft/vcpkg).

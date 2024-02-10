@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "name": "sdl-template",
-    "version": "0.0.0",
+    "name": "smooth-ca",
+    "version": "0.0.1",
     "dependencies": [
         "sdl2"
     ]
