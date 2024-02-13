@@ -13,16 +13,20 @@
 #include <stdint.h>
 #include <time.h>
 
+// window and board constants
 #define BOARD_W 200
 #define BOARD_H 200
 const float RES = 800. / BOARD_W;
-float ra = 11.f;
-const float alpha_n = 0.028f;
-const float alpha_m = 0.147f;
-const float birthone = 0.257;
+
+// simulation values (could make them dynamic with something like dearimgui)
+float dt = 0.07f;
+float ra = 12.f;
+const float alpha_n = 0.01f;
+const float alpha_m = 0.14f;
+const float birthone = 0.257f;
 const float birthtwo = 0.336f;
 const float deathone = 0.365f;
-const float deathtwo = 0.549f;
+const float deathtwo = 0.55f;
 
 uint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
     return (a<<24) + (b<<16) + (g<<8) + r;
@@ -58,36 +62,35 @@ void compute_cells(float cells[BOARD_H][BOARD_W], float next_cells[BOARD_H][BOAR
             float kosum = 0.0f;
             float kiarea = 0.0f;
             float koarea = 0.0f;
-            float ri = 3.f;
+            float ri = 4.f;
 
             #define emod(x, y) (x%y + y)%y
 
             for (int y = -(ra-1); y <= ra-1; y++) {
                 for (int x = -(ra-1); x <= ra-1; x++) {
                     if (x*x + y*y <= ri*ri) {
-                        kisum += cells[emod(y+i, BOARD_H)][emod(x+j, BOARD_W)];
+                        kisum += cells[(y+i+BOARD_H) % BOARD_H][(x+j+BOARD_W) % BOARD_W];
                         kiarea++;
                     } else if (x*x + y*y <= ra*ra) {
-                        kosum += cells[emod(y+i, BOARD_H)][emod(x+j, BOARD_W)];
+                        kosum += cells[(y+i+BOARD_H) % BOARD_H][(x+j+BOARD_W) % BOARD_W];
                         koarea++;
                     }
                 }
             }
-            // for (int y = -3; y < 4; y++) {
-            //     for (int x = -3; x < 4; x++) {
-            //         if (x >= -1 && x < 2 && y >= -1 && y < 2) {
-            //             kisum += cells[(i+y+BOARD_W)%BOARD_W][(j+x+BOARD_H)%BOARD_H];
-            //             kiarea++;
-            //         } else {
-            //             kosum += cells[(i+y+BOARD_W)%BOARD_W][(j+x+BOARD_H)%BOARD_H];
-            //             koarea++;
-            //         }
-            //     }
-            // }
             kisum /= kiarea;
             kosum /= koarea;
-            next_cells[i][j] = s(kosum, kisum);
+            next_cells[i][j] = 2*s(kosum, kisum)-1;
+        }
+    }
 
+    #define clamp(val, l, h) val < l ? l : (val > h ? h : val)
+
+    // smooth time stepping
+    for (int y = 0; y < BOARD_H; y++) {
+        for (int x = 0; x < BOARD_W; x++) {
+            cells[y][x] += dt* next_cells[y][x];
+            cells[y][x] = clamp(cells[y][x], 0, 1);
+            // cells[y][x] = (cells[y][x] < 0.) ? 0. : (cells[y][x] > 1.) ? 1. : cells[y][x];
         }
     }
 }
@@ -131,7 +134,7 @@ int main(void) {
         }
     }
 
-    float dt = 0.f;
+    float frame_dt = 0.f;
     uint32_t last_time = SDL_GetTicks();
 
     while(quit) {
@@ -153,12 +156,12 @@ int main(void) {
                 } break;
         }
 
-        dt = ((float)SDL_GetTicks() - (float)last_time) / 1000.0f;
+        frame_dt = ((float)SDL_GetTicks() - (float)last_time) / 1000.0f;
 
-        if (floor(dt / (1.0f / 15.f)) > 0.f) {
+        if (floor(frame_dt / (1.0f / 50.f)) > 0.f) {
             compute_cells(cells, next_cells);
-            compute_frame(framedata, next_cells);
-            memcpy(cells, next_cells, sizeof(float)*BOARD_W*BOARD_H);
+            compute_frame(framedata, cells);
+            // memcpy(cells, next_cells, sizeof(float)*BOARD_W*BOARD_H);
             last_time = SDL_GetTicks();
         }
 
